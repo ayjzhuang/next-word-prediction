@@ -2,22 +2,22 @@
 
 An interactive next-word prediction app. You type one word at a time, and an LSTM neural network tries to predict what you'll type next. It learns from your input in real time.
 
-Built with Streamlit and a pure-numpy LSTM — no TensorFlow or PyTorch required.
+Built with Streamlit and a pure-numpy LSTM - no TensorFlow or PyTorch required.
 
 ![Python](https://img.shields.io/badge/Python-3.9+-blue)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.30+-red)
 
 ## Try it live
 
-👉 [**Launch the app on Streamlit**](https://ayjzhuang-next-word-prediction.streamlit.app)
+👉 [**Launch the app on Streamlit**](https://can-i-guess-your-next-word.streamlit.app/)
 
 ## How it works
 
 1. The model trains on a text corpus when you first load the page (~15-30s)
-2. You type your first word — this gives the model context
+2. You type your first word - this gives the model context
 3. From the second word onward, the model shows its top 5 predictions with probabilities
 4. You type your actual word, and the model tells you if it guessed right, was close (top 10), or missed
-5. After each word, the model fine-tunes on your recent input — so it adapts to your writing style
+5. After each word, the model fine-tunes on your recent input - so it adapts to your writing style
 6. Your session is saved locally, so refreshing the page keeps your history and the model remembers your patterns
 
 ## What's under the hood
@@ -37,9 +37,9 @@ Online learning: after each word you type, the model runs 5 passes of fine-tunin
 
 - Top 5 predictions with probability bars after each word
 - Near-miss detection (your word was in top 10 but not top 5)
-- Session persistence — refresh the page and your history is restored
+- Session persistence - refresh the page and your history is restored
 - "Patterns I've learned" section showing word pairs the model picked up from you
-- Custom corpus upload — retrain the base model on any .txt file
+- Custom corpus upload - retrain the base model on any .txt file
 - Accuracy tracking across your session
 
 ## Quick start
@@ -57,7 +57,7 @@ Opens at `http://localhost:8501`
 
 ```
 next-word-prediction/
-├── app.py              # everything — model, training, UI
+├── app.py              # everything - model, training, UI
 ├── requirements.txt    # streamlit + numpy
 ├── .gitignore
 └── README.md
@@ -65,8 +65,8 @@ next-word-prediction/
 
 ## Dependencies
 
-- `streamlit` — web UI
-- `numpy` — LSTM implementation
+- `streamlit` - web UI
+- `numpy` - LSTM implementation
 
 That's it. Everything else is Python standard library.
 
@@ -76,7 +76,7 @@ That's it. Everything else is Python standard library.
 2. Go to [share.streamlit.io](https://share.streamlit.io)
 3. Connect your GitHub account
 4. Select your repo, branch `main`, and file `app.py`
-5. Click Deploy — it'll give you a public URL
+5. Click Deploy - it'll give you a public URL
 
 ---
 
