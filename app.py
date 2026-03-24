@@ -663,6 +663,11 @@ DEFAULTS = {
     "user_bigrams": {},    # {"word1 word2": count} — what the model learned from you
 }
 
+# Initialize defaults FIRST (before loading session, which appends to history)
+for k, v in DEFAULTS.items():
+    if k not in st.session_state:
+        st.session_state[k] = v if not isinstance(v, (list, dict)) else (list(v) if isinstance(v, list) else dict(v))
+
 # Load saved session on first run
 if "session_loaded" not in st.session_state:
     st.session_state.session_loaded = True
@@ -688,10 +693,6 @@ if "session_loaded" not in st.session_state:
             all_preds = [(tokenizer.idx2word.get(i, ""), p) for i, p in raw if i != 0]
             st.session_state.preds = all_preds[:5]
             st.session_state.preds_extended = all_preds[:10]
-
-for k, v in DEFAULTS.items():
-    if k not in st.session_state:
-        st.session_state[k] = v if not isinstance(v, (list, dict)) else (list(v) if isinstance(v, list) else dict(v))
 
 
 def get_preds(context, top_k=10):
