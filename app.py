@@ -109,13 +109,6 @@ st.markdown("""
         color: var(--text2); background: #f9fafb; border: 1px solid var(--border);
         border-radius: 6px; padding: 10px 14px; margin: 6px 0;
     }
-    /* Red button for full reset */
-    div[data-testid="column"]:last-child .stButton > button {
-        background: var(--red) !important; color: white !important;
-    }
-    div[data-testid="column"]:last-child .stButton > button:hover {
-        background: #b91c1c !important;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -971,6 +964,14 @@ with c2:
         save_session()
         st.rerun()
 with c3:
+    st.markdown("""<style>
+    div[data-testid="stHorizontalBlock"]:last-of-type div[data-testid="column"]:last-child .stButton > button {
+        background: #dc2626 !important; color: white !important;
+    }
+    div[data-testid="stHorizontalBlock"]:last-of-type div[data-testid="column"]:last-child .stButton > button:hover {
+        background: #b91c1c !important;
+    }
+    </style>""", unsafe_allow_html=True)
     if st.button("Full reset", use_container_width=True):
         st.session_state.model_trained = False
         st.session_state.session_loaded = False
