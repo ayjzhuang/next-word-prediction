@@ -899,7 +899,7 @@ if bigrams:
 
 # Controls
 st.markdown("---")
-c1, c2 = st.columns(2)
+c1, c2, c3 = st.columns(3)
 with c1:
     if st.button("Clear & start over", use_container_width=True):
         for k in DEFAULTS: st.session_state[k] = DEFAULTS[k] if not isinstance(DEFAULTS[k], (list, dict)) else (list(DEFAULTS[k]) if isinstance(DEFAULTS[k], list) else dict(DEFAULTS[k]))
@@ -908,9 +908,42 @@ with c1:
         if os.path.exists(SESSION_FILE): os.remove(SESSION_FILE)
         st.rerun()
 with c2:
-    if st.button("Retrain model", use_container_width=True):
+    user_words = st.session_state.words
+    has_enough = len(user_words) >= 5
+    if st.button("Retrain with my words", use_container_width=True, disabled=not has_enough,
+                 help="Need at least 5 words" if not has_enough else "Merges your words into the training corpus and retrains the model from scratch"):
+        # Build augmented corpus: original corpus + user sentences repeated for emphasis
+        user_text = " ".join(user_words)
+        # Repeat user text a few times so it has real weight against the large corpus
+        augmented = corpus_text + "\n" + (user_text + " ") * 5
+        st.session_state.custom_corpus = augmented
         st.session_state.model_trained = False
         st.session_state.session_loaded = False
+        # Keep the user's stats but reset history display (will rebuild on reload)
+        old_total, old_hits, old_near, old_learned = (
+            st.session_state.total, st.session_state.hits,
+            st.session_state.near_hits, st.session_state.learned
+        )
+        old_words = list(st.session_state.words)
+        old_bigrams = dict(st.session_state.get("user_bigrams", {}))
+        for k in DEFAULTS: st.session_state[k] = DEFAULTS[k] if not isinstance(DEFAULTS[k], (list, dict)) else (list(DEFAULTS[k]) if isinstance(DEFAULTS[k], list) else dict(DEFAULTS[k]))
+        # Restore stats so the user doesn't lose their score
+        st.session_state.words = old_words
+        st.session_state.total = old_total
+        st.session_state.hits = old_hits
+        st.session_state.near_hits = old_near
+        st.session_state.learned = old_learned
+        st.session_state.user_bigrams = old_bigrams
+        # Rebuild history (simplified)
+        for w in old_words:
+            st.session_state.history.append({"word": w, "hit": None, "near": False, "preds": []})
+        save_session()
+        st.rerun()
+with c3:
+    if st.button("Full reset", use_container_width=True):
+        st.session_state.model_trained = False
+        st.session_state.session_loaded = False
+        st.session_state.custom_corpus = None
         for k in DEFAULTS: st.session_state[k] = DEFAULTS[k] if not isinstance(DEFAULTS[k], (list, dict)) else (list(DEFAULTS[k]) if isinstance(DEFAULTS[k], list) else dict(DEFAULTS[k]))
         if os.path.exists(SESSION_FILE): os.remove(SESSION_FILE)
         st.rerun()
