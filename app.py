@@ -109,6 +109,13 @@ st.markdown("""
         color: var(--text2); background: #f9fafb; border: 1px solid var(--border);
         border-radius: 6px; padding: 10px 14px; margin: 6px 0;
     }
+    /* Red button for full reset */
+    div[data-testid="column"]:last-child .stButton > button {
+        background: var(--red) !important; color: white !important;
+    }
+    div[data-testid="column"]:last-child .stButton > button:hover {
+        background: #b91c1c !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -661,6 +668,7 @@ DEFAULTS = {
     "preds_extended": [],  # top 10 for near-miss checking
     "learned": 0,
     "user_bigrams": {},    # {"word1 word2": count} — what the model learned from you
+    "past_sentences": [],  # archived sentences from previous rounds
 }
 
 # Initialize defaults FIRST (before loading session, which appends to history)
@@ -897,46 +905,69 @@ if bigrams:
         <div style="margin-top:8px;font-size:0.78rem;color:#9ca3af;">These are word pairs I've seen you type. The more I see a pattern, the better I predict it.</div>
     </div>""", unsafe_allow_html=True)
 
+# Past sentences memory
+past = st.session_state.get("past_sentences", [])
+if past:
+    sentences_html = ""
+    for i, s in enumerate(reversed(past)):
+        sentences_html += f'<div style="padding:6px 0;border-bottom:1px solid #f3f4f6;font-family:JetBrains Mono,monospace;font-size:0.82rem;color:#374151;">"{s}"</div>'
+    st.markdown(f"""<div class="card">
+        <div style="font-size:0.72rem;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">My memory — your past sentences</div>
+        {sentences_html}
+    </div>""", unsafe_allow_html=True)
+
 # Controls
 st.markdown("---")
 c1, c2, c3 = st.columns(3)
 with c1:
-    if st.button("Clear & start over", use_container_width=True):
-        for k in DEFAULTS: st.session_state[k] = DEFAULTS[k] if not isinstance(DEFAULTS[k], (list, dict)) else (list(DEFAULTS[k]) if isinstance(DEFAULTS[k], list) else dict(DEFAULTS[k]))
+    if st.button("New sentence", use_container_width=True):
+        # Archive current sentence if there are words
+        if st.session_state.words:
+            sentence = " ".join(st.session_state.words)
+            if "past_sentences" not in st.session_state:
+                st.session_state.past_sentences = []
+            st.session_state.past_sentences.append(sentence)
+        # Clear current round but keep stats, bigrams, learned, past_sentences, model
+        st.session_state.words = []
+        st.session_state.history = []
         st.session_state.preds = []
         st.session_state.preds_extended = []
-        if os.path.exists(SESSION_FILE): os.remove(SESSION_FILE)
+        save_session()
         st.rerun()
 with c2:
     user_words = st.session_state.words
     has_enough = len(user_words) >= 5
     if st.button("Retrain with my words", use_container_width=True, disabled=not has_enough,
                  help="Need at least 5 words" if not has_enough else "Merges your words into the training corpus and retrains the model from scratch"):
-        # Build augmented corpus: original corpus + user sentences repeated for emphasis
-        user_text = " ".join(user_words)
-        # Repeat user text a few times so it has real weight against the large corpus
-        augmented = corpus_text + "\n" + (user_text + " ") * 5
+        # Archive current sentence first
+        if st.session_state.words:
+            sentence = " ".join(st.session_state.words)
+            if "past_sentences" not in st.session_state:
+                st.session_state.past_sentences = []
+            st.session_state.past_sentences.append(sentence)
+        # Build augmented corpus: original corpus + all user sentences repeated for emphasis
+        all_user_text = " ".join(st.session_state.words)
+        for s in st.session_state.get("past_sentences", []):
+            all_user_text += " " + s
+        augmented = corpus_text + "\n" + (all_user_text + " ") * 5
         st.session_state.custom_corpus = augmented
         st.session_state.model_trained = False
         st.session_state.session_loaded = False
-        # Keep the user's stats but reset history display (will rebuild on reload)
+        # Keep the user's stats
         old_total, old_hits, old_near, old_learned = (
             st.session_state.total, st.session_state.hits,
             st.session_state.near_hits, st.session_state.learned
         )
-        old_words = list(st.session_state.words)
         old_bigrams = dict(st.session_state.get("user_bigrams", {}))
+        old_past = list(st.session_state.get("past_sentences", []))
         for k in DEFAULTS: st.session_state[k] = DEFAULTS[k] if not isinstance(DEFAULTS[k], (list, dict)) else (list(DEFAULTS[k]) if isinstance(DEFAULTS[k], list) else dict(DEFAULTS[k]))
         # Restore stats so the user doesn't lose their score
-        st.session_state.words = old_words
         st.session_state.total = old_total
         st.session_state.hits = old_hits
         st.session_state.near_hits = old_near
         st.session_state.learned = old_learned
         st.session_state.user_bigrams = old_bigrams
-        # Rebuild history (simplified)
-        for w in old_words:
-            st.session_state.history.append({"word": w, "hit": None, "near": False, "preds": []})
+        st.session_state.past_sentences = old_past
         save_session()
         st.rerun()
 with c3:
