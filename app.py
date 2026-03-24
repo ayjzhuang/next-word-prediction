@@ -95,6 +95,12 @@ st.markdown("""
         font-weight: 600 !important; font-size: 0.85rem !important;
     }
     .stButton > button:hover { background: #1d4ed8 !important; }
+    button[data-testid="stBaseButton-primary"] {
+        background: #dc2626 !important;
+    }
+    button[data-testid="stBaseButton-primary"]:hover {
+        background: #b91c1c !important;
+    }
     .stTextInput input {
         font-family: 'JetBrains Mono', monospace !important;
         font-size: 1rem !important; border-radius: 8px !important;
@@ -964,15 +970,7 @@ with c2:
         save_session()
         st.rerun()
 with c3:
-    st.markdown("""<style>
-    div[data-testid="stHorizontalBlock"]:last-of-type div[data-testid="column"]:last-child .stButton > button {
-        background: #dc2626 !important; color: white !important;
-    }
-    div[data-testid="stHorizontalBlock"]:last-of-type div[data-testid="column"]:last-child .stButton > button:hover {
-        background: #b91c1c !important;
-    }
-    </style>""", unsafe_allow_html=True)
-    if st.button("Full reset", use_container_width=True):
+    if st.button("Full reset", use_container_width=True, type="primary", key="full_reset_btn"):
         st.session_state.model_trained = False
         st.session_state.session_loaded = False
         st.session_state.custom_corpus = None
